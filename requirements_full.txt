@@ -1,0 +1,5 @@
+matplotlib
+seaborn
+nltk
+keras-tuner
+wordcloud
