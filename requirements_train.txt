@@ -1,0 +1,6 @@
+matplotlib
+seaborn
+nltk
+keras-tuner
+wordcloud
+tensorflow==2.17.0
