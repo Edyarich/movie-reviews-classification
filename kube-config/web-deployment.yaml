@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentiment-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sentiment-web
+  template:
+    metadata:
+      labels:
+        app: sentiment-web
+    spec:
+      containers:
+      - name: web
+        image: edyarich/sentiment-web:v1
+        envFrom:
+          - secretRef:
+              name: web-secret
+        env:
+          - name: GATEWAY_URL
+            value: "http://sentiment-gateway:80/predict"
+        ports:
+          - containerPort: 8080
