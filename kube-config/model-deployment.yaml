@@ -14,7 +14,11 @@ spec:
     spec:
       containers:
       - name: tf-serving
-        image: edyarich/sentiment-tf-serving:v1
+        image: edyarich/sentiment-tf-serving:v3
+        resources:
+          limits: # 512 Mi RAM, up to 2 vCPU
+            memory: "512Mi"
+            cpu: "2"
         args:
           - --model_name=sentiment
           - --model_base_path=/models/sentiment
