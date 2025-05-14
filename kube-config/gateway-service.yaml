@@ -6,5 +6,5 @@ spec:
   selector:
     app: sentiment-gateway
   ports:
-  - port: 80            # cluster‑internal port
-    targetPort: 5000    # container port
+  - port: 80
+    targetPort: 5000
