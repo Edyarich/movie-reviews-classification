@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentiment-gateway
+spec:
+  selector:
+    app: sentiment-gateway
+  ports:
+  - port: 80            # cluster‑internal port
+    targetPort: 5000    # container port

@@ -20,7 +20,8 @@ def main():
     # Adding arguments
     parser.add_argument('train_df_path', type=str, help='Path to the training dataframe')
     parser.add_argument('val_df_path', type=str, help='Path to the validation dataframe')
-    parser.add_argument('output_path', type=str, help='Path to save model')
+    parser.add_argument('--model_dir', type=str, default='sentiment/1', help='Path to save model')
+    parser.add_argument('--metadata_filename', type=str, default='metadata.pkl', help='Path to save model')
 
     # Parsing arguments
     args = parser.parse_args()
@@ -29,18 +30,19 @@ def main():
     df_train = pd.read_csv(args.train_df_path)
     df_val = pd.read_csv(args.val_df_path)
 
-    train_dataset_tf, metadata = preprocess_train_data(df_train)
+    os.makedirs(args.model_dir, exist_ok=True)
+    train_dataset_tf, metadata = preprocess_train_data(df_train, tokenizer_dir=args.model_dir)
     val_dataset_tf = preprocess_val_data(df_val, metadata)
     model = instantiate_and_train_model(train_dataset_tf, val_dataset_tf)
     
     print("Prediction quality on a training dataset")
     score_dl_model(model, val_dataset_tf)
     
-    converter = tf.lite.TFLiteConverter.from_keras_model(model)
-    tflite_model = converter.convert()
-
-    with open(args.output_path, 'wb') as fd:
-        pickle.dump((tflite_model, metadata), fd)
+    model.export(args.model_dir)
+    
+    metadata_full_path = os.path.join(args.model_dir, args.metadata_filename)
+    with open(metadata_full_path, "wb") as f:
+        pickle.dump(metadata, f)
 
 
 if __name__ == "__main__":

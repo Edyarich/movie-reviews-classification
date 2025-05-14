@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentiment-tf-serving
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sentiment-tf-serving
+  template:
+    metadata:
+      labels:
+        app: sentiment-tf-serving
+    spec:
+      containers:
+      - name: tf-serving
+        image: edyarich/sentiment-tf-serving:v1
+        args:
+          - --model_name=sentiment
+          - --model_base_path=/models/sentiment
+        ports:
+          - containerPort: 8501
