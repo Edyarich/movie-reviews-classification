@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  tf-serving:
+    build:
+      context: .
+      dockerfile: docker/model.dockerfile
+    image: edyarich/sentiment-tf-serving:v3
+    ports:
+      - "8501:8501"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/gateway.dockerfile
+    image: edyarich/sentiment-gateway:v4
+    environment:
+      TF_SERVING_URL: "http://tf-serving:8501/v1/models/sentiment:predict"
+    depends_on: [tf-serving]
+    ports:
+      - "5000:5000"
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.dockerfile
+    image: edyarich/sentiment-web:v1
+    environment:
+      FLASK_SECRET: ${FLASK_SECRET}
+      GATEWAY_URL: "http://gateway:5000/predict"
+    depends_on: [gateway]
+    ports:
+      - "8080:8080"
