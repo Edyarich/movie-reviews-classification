@@ -2,9 +2,27 @@
 
 The repository contains an application of deep learning model for classifying movie reviews. The model is based on the [Keras](https://keras.io/) library and the [TensorFlow](https://www.tensorflow.org/) framework.
 
+The goal is to deliver a **production‑ready sentiment‑analysis service** that scores IMDb movie reviews as *positive* or *negative*.  
+The repository covers the full MLOps life‑cycle:
+
+* **Training pipeline** – data cleaning, SentencePiece tokenizer, CNN model, evaluation.  
+* **Model export** – SavedModel format + tokenizer artefacts.  
+* **Serving stack** –  
+  * **TensorFlow Serving** for high‑performance inference,  
+  * a thin **Flask gateway** that handles all pre/post‑processing and exposes a simple REST API,  
+  * a minimal **web UI** for manual testing and CSV batch uploads.  
+* **Containerisation** – three independent images (model, gateway, web) for clear separation of concerns.  
+* **Orchestration** – Docker Compose for local development and Kubernetes manifests for production, including Secrets for sensitive config.  
+* **Upgrade/rollback workflow** – immutable version tags for every image and zero‑downtime roll‑outs via Kubernetes `kubectl set image`.
+
+
 ## Dataset
 
 Link to the dataset: [kaggle](https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews)
+
+## Model quality ✨
+
+On the validation split the CNN achieves **≈ 90 % accuracy** (macro F1 ≈ 0.90).
 
 
 ## Prerequisites
@@ -24,7 +42,56 @@ source env/bin/activate
 ```
 
 ## Project structure
-TODO
+The application is split into **three cooperative services**, each packaged as an independent Docker image and deployed as its own Deployment ➜ Service pair in Kubernetes.
+
+<br/>
+
+```mermaid
+flowchart LR
+  %% ─────────── USER ───────────
+  subgraph User
+    BROWSER["Browser<br/>or curl"]:::client
+  end
+
+  %% ─────────── WEB UI ─────────
+  subgraph Web["Web UI: 8080"]
+    UI[/"index.html<br/>single-text form<br/>CSV upload"/]:::web
+  end
+
+  %% ────────── GATEWAY ─────────
+  subgraph Gateway["Gateway Flask: 5000 CPU Pod"]
+    PREP[/"Tokenise<br/>Pad<br/>JSON -> Tensor"/]:::proc
+    THRESH[">= 0.5 ?"]:::proc
+  end
+
+  %% ──────── TF-SERVING ────────
+  subgraph TF["TensorFlow Serving: 8501 GPU CPU Pod"]
+    MODEL["SavedModel v1"]:::model
+  end
+
+  %% ────────── FLOW ────────────
+  BROWSER -->|HTTP| UI
+  UI      -->|REST JSON| PREP
+  PREP    -->|gRPC REST instances list| MODEL
+  MODEL   -->|raw score| THRESH
+  THRESH  -->|JSON score prediction| UI
+  UI      -->|HTTP| BROWSER
+
+  %% ───────── STYLE ───────────
+  classDef client fill:#fff,stroke:#777,stroke-width:1px
+  classDef web    fill:#c6e0ff,stroke:#1a73e8,color:#000
+  classDef proc   fill:#d0ffd8,stroke:#008a00,color:#000
+  classDef model  fill:#ffe8c6,stroke:#ff9500,color:#000
+```
+
+<br/>
+
+| Layer            | Goal / responsibility | Input | Output |
+| ---------------- | --------------------- | ----- | ------ |
+| **Web interface** (`webapp.py` + `index.html`) | Give users a friendly way to test the model.<br>• Single‑text box for ad‑hoc experiments.<br>• CSV upload (`text` column) for batch scoring. | Browser HTTP requests | • JSON response for single text.<br>• Downloadable CSV with `score` & `prediction` columns. |
+| **Gateway** (`gateway.py`) | All **pre‑ and post‑processing in Python**.<br>• Lower‑case, clean HTML.<br>• Tokenise with SentencePiece.<br>• Pad/trim to max length.<br>• Call TF‑Serving.<br>• Apply 0.5 threshold.<br>• Hide TF‑Serving details from outside world. | JSON `{"features":"<raw text>"}` | JSON `{"score":0.93,"prediction":"positive"}` |
+| **TF‑Serving** (custom image built from `docker/model.dockerfile`) | **High‑performance inference** on the exported SavedModel.<br>Handles model versioning, hot‑reload, batching, metrics. | gRPC / REST Predict request with an `instances` list of padded integer IDs | Raw tensor predictions (`[[0.93]]`) |
+
 
 ## Local running
 To begin with, install [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/). After that, run the commands:
@@ -68,7 +135,7 @@ python src/split_data.py
 python train.py data/train.csv data/val.csv --output_dir sentiment/1
 ```
 
-### 2. Build container images
+### 2. Build container images
 
 Don't forget to create an appropriate repository in Docker Hub.
 
