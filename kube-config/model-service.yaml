@@ -6,5 +6,5 @@ spec:
   selector:
     app: sentiment-tf-serving
   ports:
-  - port: 8501          # cluster‑internal port
-    targetPort: 8501    # container port
+  - port: 8501
+    targetPort: 8501
