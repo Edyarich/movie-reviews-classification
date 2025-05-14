@@ -25,7 +25,7 @@ args = parser.parse_args()
 with open(args.metadata, "rb") as fd:
     metadata = pickle.load(fd)
 
-TF_SERVING_URL = args.tfserving_url
+TF_SERVING_URL = os.getenv("TF_SERVING_URL", args.tfserving_url)
 TIMEOUT_SEC = 15.0
 THRESHOLD = float(os.getenv("SENTIMENT_THRESHOLD", "0.5"))
 
