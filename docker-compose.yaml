@@ -13,7 +13,7 @@ services:
     build:
       context: .
       dockerfile: docker/gateway.dockerfile
-    image: edyarich/sentiment-gateway:v4
+    image: edyarich/review-classification:v4
     environment:
       TF_SERVING_URL: "http://tf-serving:8501/v1/models/sentiment:predict"
     depends_on: [tf-serving]
