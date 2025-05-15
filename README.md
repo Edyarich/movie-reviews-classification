@@ -22,8 +22,15 @@ Link to the dataset: [kaggle](https://www.kaggle.com/datasets/lakshmi25npathi/im
 
 ## Model quality ✨
 
-On the validation split the CNN achieves **≈ 90 % accuracy** (macro F1 ≈ 0.90).
+On the validation set the model achieves **≈ 90 % accuracy** (macro F1 ≈ 0.90).
 
+|              | precision | recall | f1-score | support |
+|--------------|-----------|--------|----------|---------|
+|     negative |    0.90   |  0.91  |   0.91   |   4000  |
+|     positive |    0.91   |  0.90  |   0.91   |   4000  |
+|     accuracy |           |        |   0.91   |   8000  |
+|    macro avg |    0.91   |  0.91  |   0.91   |   8000  |
+| weighted avg |    0.91   |  0.91  |   0.91   |   8000  |
 
 ## Prerequisites
 
@@ -93,6 +100,30 @@ flowchart LR
 | **TF‑Serving** (custom image built from `docker/model.dockerfile`) | **High‑performance inference** on the exported SavedModel.<br>Handles model versioning, hot‑reload, batching, metrics. | gRPC / REST Predict request with an `instances` list of padded integer IDs | Raw tensor predictions (`[[0.93]]`) |
 
 
+## Screenshots
+
+### Web interface
+[<img src="images/web-interface.png" width="800"/>](images/web-interface.png)
+
+### Single text mode
+Positive review:
+
+[<img src="images/positive-review-example.png" width="800"/>](images/positive-review-example.png)
+
+Negative review:
+
+[<img src="images/negative-review-example.png" width="800"/>](images/negative-review-example.png)
+
+### CSV upload mode
+Upload `./data/test-web.csv`:
+
+[<img src="images/csv-upload.png" width="800"/>](images/csv-upload.png)
+
+Wait ~5 seconds to get results:
+
+[<img src="images/csv-results.png" width="400"/>](images/csv-results.png)
+
+
 ## Local running
 To begin with, install [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/). After that, run the commands:
 
@@ -132,7 +163,7 @@ pip install -r requirements_train.txt
 python src/split_data.py
 
 # train & export SavedModel to ./sentiment/1/
-python train.py data/train.csv data/val.csv --output_dir sentiment/1
+python train.py data/train.csv data/val.csv --model_dir sentiment/1
 ```
 
 ### 2. Build container images
