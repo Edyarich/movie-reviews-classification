@@ -3,3 +3,8 @@
 **/.ipynb_checkpoints
 env/
 .vscode/
+sentiment/
+*.h5
+
+data/
+!data/test-web.csv
